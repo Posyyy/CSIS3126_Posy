@@ -1,9 +1,19 @@
 <?php
 session_start();
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $role = $_POST['role']; // Get selected role
 
-    if ($role == "admin") {
+$adminPassword = "SecurePass123"; // Change this to a strong password
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!isset($_POST['role'])) {
+        die("Invalid role selection.");
+    }
+
+    $role = filter_var($_POST['role'], FILTER_SANITIZE_STRING);
+
+    if ($role === "admin") {
+        if (!isset($_POST['admin_password']) || $_POST['admin_password'] !== $adminPassword) {
+            die("Incorrect admin password.");
+        }
         $_SESSION['role'] = "admin";
     } else {
         $_SESSION['role'] = "guest";
@@ -29,14 +39,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <form method="POST">
             <div class="mb-3">
                 <label class="form-label">Select Role:</label>
-                <select name="role" class="form-select">
+                <select name="role" id="role" class="form-select" onchange="togglePasswordField()">
                     <option value="guest">Guest</option>
                     <option value="admin">Admin</option>
                 </select>
             </div>
+            <div class="mb-3" id="admin-password-field" style="display: none;">
+                <label class="form-label">Admin Password:</label>
+                <input type="password" name="admin_password" class="form-control">
+            </div>
             <button type="submit" class="btn btn-primary w-100">Login</button>
         </form>
     </div>
+
+    <script>
+    function togglePasswordField() {
+        let role = document.getElementById("role").value;
+        let passwordField = document.getElementById("admin-password-field");
+        passwordField.style.display = role === "admin" ? "block" : "none";
+    }
+    </script>
 
 </body>
 </html>

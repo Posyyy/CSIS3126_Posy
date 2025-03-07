@@ -1,16 +1,28 @@
 <?php
-require 'db.php';
+session_start();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $waitlist_id = $_POST['waitlist_id'];
-    $status = $_POST['status'];
+// Ensure only admin can update status
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== "admin") {
+    die("Unauthorized access.");
+}
 
-    $stmt = $pdo->prepare("UPDATE waitlist SET status = ? WHERE waitlist_id = ?");
+include 'db.php'; // Ensure database connection
 
-    if ($stmt->execute([$status, $waitlist_id])) {
-        echo json_encode(["success" => true, "message" => "Status updated"]);
+if (isset($_GET['id']) && isset($_GET['status'])) {
+    $id = intval($_GET['id']);
+    $status = ($_GET['status'] === 'seated') ? 'seated' : 'removed';
+
+    $sql = "UPDATE Waitlist SET status = ? WHERE waitlist_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("si", $status, $id);
+
+    if ($stmt->execute()) {
+        header("Location: admin_dashboard.php");
+        exit();
     } else {
-        echo json_encode(["success" => false, "message" => "Update failed"]);
+        die("Error updating status.");
     }
 }
+
+$conn->close();
 ?>

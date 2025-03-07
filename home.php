@@ -1,9 +1,11 @@
 <?php
 session_start();
+
 if (!isset($_SESSION['role'])) {
     header("Location: login.php");
     exit();
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -14,28 +16,19 @@ if (!isset($_SESSION['role'])) {
     <title>Home</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="d-flex justify-content-center align-items-center vh-100">
 
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container">
-            <span class="navbar-brand mb-0 h1">Welcome, <?php echo ucfirst($_SESSION['role']); ?>!</span>
-            <form method="POST" action="logout.php">
-                <button type="submit" class="btn btn-danger">Logout</button>
-            </form>
-        </div>
-    </nav>
+    <div class="card p-4 shadow-lg text-center" style="width: 25rem;">
+        <h2>Welcome, <?php echo ucfirst($_SESSION['role']); ?>!</h2>
 
-    <div class="container mt-5">
-        <h2 class="text-center">Home Page</h2>
+        <?php if ($_SESSION['role'] === "admin"): ?>
+            <p>You have full access to the system.</p>
+            <a href="admin_dashboard.php" class="btn btn-success w-100">Go to Admin Dashboard</a>
+        <?php else: ?>
+            <p>You are logged in as a Guest.</p>
+        <?php endif; ?>
 
-        <div class="text-center mt-4">
-            <label class="form-label"><strong>Select an Option:</strong></label>
-            <select class="form-select w-50 mx-auto">
-                <option value="option1">Option 1</option>
-                <option value="option2">Option 2</option>
-                <option value="option3">Option 3</option>
-            </select>
-        </div>
+        <a href="logout.php" class="btn btn-danger mt-3 w-100">Logout</a>
     </div>
 
 </body>
