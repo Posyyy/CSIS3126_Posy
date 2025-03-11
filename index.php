@@ -11,6 +11,7 @@ if (isset($_SESSION['role'])) {
         exit();
     }
 }
+
 ?>
 
 <!DOCTYPE html>

@@ -1,113 +1,49 @@
 <?php
-session_start();
+include 'db.php';
 
-// Redirect to login if role is not set
-if (!isset($_SESSION['role'])) {
-    header("Location: index.php");
-    exit();
-}
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $name = $_POST["name"];
+    $phone_number = $_POST["phone_number"];
+    $email = $_POST["email"];
+    $restaurant_id = $_POST["restaurant_id"];
+    $party_size = $_POST["party_size"];
+    $waitlist_type = $_POST["waitlist_type"];
 
-include 'db_connect.php'; // Include database connection
-?>
+    // Check if customer already exists based on email or phone number
+    $checkStmt = $conn->prepare("SELECT customer_id FROM customers WHERE email = ? OR phone_number = ?");
+    $checkStmt->bind_param("ss", $email, $phone_number);
+    $checkStmt->execute();
+    $checkStmt->store_result();
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - Restaurant Queue</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-
-<div class="container mt-5">
-    <h2 class="text-center">Restaurant Queue Management</h2>
-
-    <!-- Display different content for Admins and Guests -->
-    <?php if ($_SESSION['role'] == "admin"): ?>
-        <h4 class="text-success text-center">Welcome, Admin</h4>
-    <?php else: ?>
-        <h4 class="text-primary text-center">Welcome, Guest</h4>
-    <?php endif; ?>
-
-    <!-- Form to Add to Waitlist (Visible to All) -->
-    <div class="card p-4 my-4">
-        <h4>Add Yourself to the Waitlist</h4>
-        <form id="waitlistForm">
-            <div class="mb-3">
-                <label for="name" class="form-label">Customer Name</label>
-                <input type="text" class="form-control" id="name" required>
-            </div>
-            <div class="mb-3">
-                <label for="party_size" class="form-label">Party Size</label>
-                <input type="number" class="form-control" id="party_size" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Join Waitlist</button>
-        </form>
-    </div>
-
-    <!-- Waitlist Table (Visible to All) -->
-    <div class="card p-4">
-        <h4>Current Waitlist</h4>
-        <table class="table">
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Party Size</th>
-                <th>Status</th>
-                <?php if ($_SESSION['role'] == "admin"): ?>
-                    <th>Action</th> <!-- Admins can remove users -->
-                <?php endif; ?>
-            </tr>
-            </thead>
-            <tbody id="waitlistTable">
-            <!-- Data will be inserted here dynamically -->
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Logout Button -->
-    <div class="text-center mt-3">
-        <a href="logout.php" class="btn btn-danger">Logout</a>
-    </div>
-</div>
-
-<script>
-    // Fetch Waitlist Data
-    function loadWaitlist() {
-        $.get("get_waitlist.php", function(data) {
-            $("#waitlistTable").html(data);
-        });
-    }
-
-    // Handle Form Submission
-    $("#waitlistForm").submit(function(event) {
-        event.preventDefault();
-        let name = $("#name").val();
-        let party_size = $("#party_size").val();
-
-        $.post("add_to_waitlist.php", { name: name, party_size: party_size }, function(response) {
-            alert(response);
-            loadWaitlist();
-            $("#waitlistForm")[0].reset();
-        });
-    });
-
-    // Function to remove a customer from the waitlist
-    function removeFromWaitlist(id) {
-        if (confirm("Are you sure you want to remove this customer?")) {
-            $.post("remove_from_waitlist.php", { id: id }, function(response) {
-                alert(response);
-                loadWaitlist();
-            });
+    if ($checkStmt->num_rows > 0) {
+        // Customer exists, fetch customer ID
+        $checkStmt->bind_result($customer_id);
+        $checkStmt->fetch();
+    } else {
+        // Customer doesn't exist, insert into customers table
+        $insertStmt = $conn->prepare("INSERT INTO customers (name, phone_number, email) VALUES (?, ?, ?)");
+        $insertStmt->bind_param("sss", $name, $phone_number, $email);
+        if ($insertStmt->execute()) {
+            $customer_id = $insertStmt->insert_id; // Get the newly inserted customer ID
+        } else {
+            echo "Error: " . $conn->error;
+            exit();
         }
+        $insertStmt->close();
+    }
+    $checkStmt->close();
+
+    // Insert into waitlist
+    $stmt = $conn->prepare("INSERT INTO waitlist (customer_id, restaurant_id, party_size, waitlist_type, status, arrival_time) VALUES (?, ?, ?, ?, 'Waiting', NOW())");
+    $stmt->bind_param("iiss", $customer_id, $restaurant_id, $party_size, $waitlist_type);
+
+    if ($stmt->execute()) {
+        echo "Successfully added to waitlist!";
+    } else {
+        echo "Error: " . $conn->error;
     }
 
-    // Load waitlist when page loads
-    $(document).ready(loadWaitlist);
-</script>
-
-</body>
-</html>
+    $stmt->close();
+    $conn->close();
+}
+?>
