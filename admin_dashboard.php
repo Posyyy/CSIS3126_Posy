@@ -2,10 +2,10 @@
 session_start();
 
 // Redirect non-admin users to home
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== "admin") {
-    header("Location: home.php");
-    exit();
-}
+//if (!isset($_SESSION['role']) || $_SESSION['role'] !== "admin") {
+  //  header("Location: index.html");
+   // exit();
+//}
 
 include 'db.php'; // Ensure this file correctly establishes the database connection
 

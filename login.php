@@ -1,64 +1,24 @@
 <?php
 session_start();
-
-$adminPassword = "SecurePass123"; // Change this to a strong password
+include 'db.php'; // Ensure this connects to your database
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (!isset($_POST['role'])) {
-        die("Invalid role selection.");
-    }
+    $username = $_POST['username'];
+    $password = $_POST['password'];
 
-    $role = filter_var($_POST['role'], FILTER_SANITIZE_STRING);
+    // Check credentials (modify according to your DB structure)
+    $stmt = $conn->prepare("SELECT * FROM admins WHERE username = ? AND password = ?");
+    $stmt->bind_param("ss", $username, $password); // Assuming passwords are stored in plaintext (not recommended)
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    if ($role === "admin") {
-        if (!isset($_POST['admin_password']) || $_POST['admin_password'] !== $adminPassword) {
-            die("Incorrect admin password.");
-        }
-        $_SESSION['role'] = "admin";
+    if ($result->num_rows == 1) {
+        $_SESSION['admin_logged_in'] = true;
+        $_SESSION['username'] = $username;
+        header("Location: admin_dashboard.php"); // Redirect to admin panel
+        exit();
     } else {
-        $_SESSION['role'] = "guest";
+        echo "<script>alert('Invalid username or password!'); window.location.href='index.php';</script>";
     }
-
-    header("Location: home.php");
-    exit();
 }
 ?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="d-flex justify-content-center align-items-center vh-100">
-
-    <div class="card p-4 shadow-lg" style="width: 25rem;">
-        <h2 class="text-center">Login</h2>
-        <form method="POST">
-            <div class="mb-3">
-                <label class="form-label">Select Role:</label>
-                <select name="role" id="role" class="form-select" onchange="togglePasswordField()">
-                    <option value="guest">Guest</option>
-                    <option value="admin">Admin</option>
-                </select>
-            </div>
-            <div class="mb-3" id="admin-password-field" style="display: none;">
-                <label class="form-label">Admin Password:</label>
-                <input type="password" name="admin_password" class="form-control">
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Login</button>
-        </form>
-    </div>
-
-    <script>
-    function togglePasswordField() {
-        let role = document.getElementById("role").value;
-        let passwordField = document.getElementById("admin-password-field");
-        passwordField.style.display = role === "admin" ? "block" : "none";
-    }
-    </script>
-
-</body>
-</html>
