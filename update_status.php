@@ -1,28 +1,30 @@
 <?php
-session_start();
+include 'db.php';
 
-// Ensure only admin can update status
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== "admin") {
-    die("Unauthorized access.");
-}
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id']) && isset($_POST['status'])) {
+    $id = intval($_POST['id']);
+    $status = $_POST['status'];
 
-include 'db.php'; // Ensure database connection
+    // Validate status options
+    $allowed_statuses = ['Seated', 'Removed', 'Waiting'];
+    if (!in_array($status, $allowed_statuses)) {
+        echo "Invalid status update!";
+        exit();
+    }
 
-if (isset($_GET['id']) && isset($_GET['status'])) {
-    $id = intval($_GET['id']);
-    $status = ($_GET['status'] === 'seated') ? 'seated' : 'removed';
-
-    $sql = "UPDATE Waitlist SET status = ? WHERE waitlist_id = ?";
-    $stmt = $conn->prepare($sql);
+    // Update the waitlist status
+    $stmt = $conn->prepare("UPDATE Waitlist SET status = ? WHERE waitlist_id = ?");
     $stmt->bind_param("si", $status, $id);
 
     if ($stmt->execute()) {
-        header("Location: admin_dashboard.php");
-        exit();
+        echo "Status updated successfully!";
     } else {
-        die("Error updating status.");
+        echo "Error updating status: " . $conn->error;
     }
-}
 
-$conn->close();
+    $stmt->close();
+    $conn->close();
+} else {
+    echo "Invalid request!";
+}
 ?>

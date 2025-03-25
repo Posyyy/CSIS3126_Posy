@@ -14,12 +14,14 @@ if ($result->num_rows > 0) {
         echo "<td>" . $row['waitlist_id'] . "</td>";
         echo "<td>" . htmlspecialchars($row['name']) . "</td>";
         echo "<td>" . $row['party_size'] . "</td>";
-        echo "<td>" . htmlspecialchars($row['status']) . "</td>";
+        echo "<td id='status-{$row['waitlist_id']}'>" . htmlspecialchars($row['status']) . "</td>";
 
-        // If user is admin, show remove button
         session_start();
         if (isset($_SESSION['role']) && $_SESSION['role'] == "admin") {
-            echo "<td><button class='btn btn-danger btn-sm' onclick='removeFromWaitlist(" . $row['waitlist_id'] . ")'>Remove</button></td>";
+            echo "<td>
+                    <button class='btn btn-success btn-sm' onclick='updateStatus(" . $row['waitlist_id'] . ", \"Seated\")'>Seat</button>
+                    <button class='btn btn-danger btn-sm' onclick='updateStatus(" . $row['waitlist_id'] . ", \"Removed\")'>Remove</button>
+                  </td>";
         }
 
         echo "</tr>";
