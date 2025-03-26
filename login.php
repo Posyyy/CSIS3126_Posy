@@ -1,24 +1,46 @@
 <?php
 session_start();
-include 'db.php'; // Ensure this connects to your database
+include 'db.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    $email = $_POST['email'] ?? null;
+    $password = $_POST['password'] ?? null;
 
-    // Check credentials (modify according to your DB structure)
-    $stmt = $conn->prepare("SELECT * FROM admins WHERE username = ? AND password = ?");
-    $stmt->bind_param("ss", $username, $password); // Assuming passwords are stored in plaintext (not recommended)
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows == 1) {
-        $_SESSION['admin_logged_in'] = true;
-        $_SESSION['username'] = $username;
-        header("Location: admin_dashboard.php"); // Redirect to admin panel
-        exit();
-    } else {
-        echo "<script>alert('Invalid username or password!'); window.location.href='index.php';</script>";
+    if (!$email || !$password) {
+        die("⚠️ Email and password are required.");
     }
+
+    $stmt = $conn->prepare("SELECT staff_id, password_hash, role FROM staff WHERE email = ?");
+    if (!$stmt) {
+        die("❌ Query preparation failed: " . $conn->error);
+    }
+
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows > 0) {
+        $stmt->bind_result($id, $hashed_password, $role);
+        $stmt->fetch();
+
+        if (password_verify($password, $hashed_password)) {
+            // Secure session
+            session_regenerate_id(true);
+            $_SESSION['user_id'] = $id;
+            $_SESSION['role'] = $role;
+            $_SESSION['staff'] = in_array($role, ['manager', 'host', 'server', 'admin']);
+
+            // Redirect all staff to admin_dashboard.php
+            header("Location: admin_dashboard.php");
+            exit();
+        } else {
+            echo "❌ Invalid credentials.";
+        }
+    } else {
+        echo "❌ User not found.";
+    }
+
+    $stmt->close();
 }
+$conn->close();
 ?>

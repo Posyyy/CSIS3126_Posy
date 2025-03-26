@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->close();
     }
 
-    // Insert into waitlist
+    // Insert into waitlist (restaurant_id will default to 1 in MySQL)
     $stmt = $conn->prepare("INSERT INTO Waitlist (customer_id, party_size, status, waitlist_type, reservation_time, arrival_time)
                             VALUES (?, ?, 'Waiting', ?, ?, NOW())");
     $stmt->bind_param("iiss", $customer_id, $party_size, $waitlist_type, $reservation_time);
@@ -41,3 +41,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->close();
     $conn->close();
 }
+?>

@@ -1,25 +1,28 @@
 <?php
 session_start();
+include 'db.php'; // Ensure database connection is established
 
-// Redirect non-admin users to home
-//if (!isset($_SESSION['role']) || $_SESSION['role'] !== "admin") {
-  //  header("Location: index.html");
-   // exit();
-//}
-
-include 'db.php'; // Ensure this file correctly establishes the database connection
+// Redirect non-staff users to login
+if (!isset($_SESSION['user_id']) || !$_SESSION['staff']) {
+    header("Location: login.php");
+    exit();
+}
 
 // Fetch waitlist data
-$sql = "SELECT Waitlist.waitlist_id, Customers.name, Customers.phone_number, Waitlist.party_size, Waitlist.status
-        FROM Waitlist
-        INNER JOIN Customers ON Waitlist.customer_id = Customers.customer_id
-        ORDER BY Waitlist.waitlist_id ASC";
+$sql = "SELECT waitlist.waitlist_id, customers.name, customers.phone_number, waitlist.party_size, waitlist.status
+        FROM waitlist
+        INNER JOIN customers ON waitlist.customer_id = customers.customer_id
+        ORDER BY waitlist.waitlist_id ASC";
 
 $result = $conn->query($sql);
-
 $waitlist = [];
-while ($row = $result->fetch_assoc()) {
-    $waitlist[] = $row;
+
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $waitlist[] = $row;
+    }
+} else {
+    die("❌ Database query error: " . $conn->error);
 }
 
 $conn->close();
@@ -54,11 +57,11 @@ $conn->close();
             <tbody>
                 <?php foreach ($waitlist as $entry): ?>
                 <tr>
-                    <td><?php echo $entry['waitlist_id']; ?></td>
+                    <td><?php echo htmlspecialchars($entry['waitlist_id']); ?></td>
                     <td><?php echo htmlspecialchars($entry['name']); ?></td>
                     <td><?php echo htmlspecialchars($entry['phone_number']); ?></td>
-                    <td><?php echo $entry['party_size']; ?></td>
-                    <td id="status-<?php echo $entry['waitlist_id']; ?>"><?php echo ucfirst($entry['status']); ?></td>
+                    <td><?php echo htmlspecialchars($entry['party_size']); ?></td>
+                    <td id="status-<?php echo $entry['waitlist_id']; ?>"><?php echo ucfirst(htmlspecialchars($entry['status'])); ?></td>
                     <td>
                         <button onclick="updateStatus(<?php echo $entry['waitlist_id']; ?>, 'Seated')" class="btn btn-success btn-sm">Seat</button>
                         <button onclick="updateStatus(<?php echo $entry['waitlist_id']; ?>, 'Removed')" class="btn btn-danger btn-sm">Remove</button>
@@ -69,7 +72,7 @@ $conn->close();
         </table>
     </div>
 
-    <a href="home.php" class="btn btn-secondary mt-3">Back to Home</a>
+    <a href="index.html" class="btn btn-secondary mt-3">Back to Home</a>
     <a href="logout.php" class="btn btn-danger mt-3">Logout</a>
 
     <script>
