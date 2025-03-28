@@ -2,7 +2,8 @@
 session_start();
 include 'db.php';
 
-$restaurant_id = 5; // Replace this dynamically if needed
+$restaurant_id = 1; // Replace this dynamically if needed
+$restaurant_id = 5;
 ?>
 
 <!DOCTYPE html>

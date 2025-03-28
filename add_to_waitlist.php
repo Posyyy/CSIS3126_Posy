@@ -8,7 +8,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST["email"];
     $party_size = $_POST["party_size"];
     $waitlist_type = $_POST["waitlist_type"];
-    $reservation_time = ($waitlist_type == "Reservation") ? $_POST["reservation_time"] : NULL;
+
+    // Ensure reservation_time is properly formatted
+    if ($waitlist_type == "Reservation" && !empty($_POST["reservation_time"])) {
+        $reservation_time = date("Y-m-d") . " " . $_POST["reservation_time"] . ":00"; // Append today's date & seconds
+    } else {
+        $reservation_time = NULL;
+    }
 
     // Check if the customer already exists
     $stmt = $conn->prepare("SELECT customer_id FROM Customers WHERE phone_number = ?");
@@ -41,4 +47,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->close();
     $conn->close();
 }
-?>

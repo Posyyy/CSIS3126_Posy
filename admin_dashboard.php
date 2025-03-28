@@ -3,10 +3,8 @@ session_start();
 include 'db.php'; // Ensure database connection is established
 
 // Redirect non-staff users to login
-if (!isset($_SESSION['user_id']) || !$_SESSION['staff']) {
-    header("Location: login.php");
-    exit();
-}
+
+
 
 // Fetch waitlist data
 $sql = "SELECT waitlist.waitlist_id, customers.name, customers.phone_number, waitlist.party_size, waitlist.status

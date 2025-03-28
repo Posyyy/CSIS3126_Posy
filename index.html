@@ -3,6 +3,7 @@ session_start();
 include 'db.php';
 
 $restaurant_id = 5; // Replace this dynamically if needed
+$restaurant_id = 1;
 ?>
 
 <!DOCTYPE html>
@@ -45,10 +46,14 @@ $restaurant_id = 5; // Replace this dynamically if needed
 <div class="login-container" id="loginForm">
     <form action="login.php" method="post">
         <div class="mb-2">
-            <input type="text" name="username" class="form-control" placeholder="Username" required>
+            <label>
+                <input type="text" name="email" class="form-control" placeholder="email" required>
+            </label>
         </div>
         <div class="mb-2">
-            <input type="password" name="password" class="form-control" placeholder="Password" required>
+            <label>
+                <input type="password" name="password" class="form-control" placeholder="Password" required>
+            </label>
         </div>
         <button type="submit" class="btn btn-success btn-sm w-100">Login</button>
     </form>
