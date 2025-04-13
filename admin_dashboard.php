@@ -20,7 +20,7 @@ if ($result) {
         $waitlist[] = $row;
     }
 } else {
-    die("❌ Database query error: " . $conn->error);
+    die(" Database query error: " . $conn->error);
 }
 
 $conn->close();
@@ -83,6 +83,45 @@ $conn->close();
             }
         }
     </script>
+<h4 class="mt-4">Table Layout</h4>
+<div class="container">
+    <div class="row row-cols-4" id="tableGrid">
+        <!-- Table buttons will be inserted dynamically -->
+    </div>
+</div>
+
+<script>
+    function loadTableGrid() {
+        $.get("get_tables.php", function(data) {
+            const tables = JSON.parse(data);
+            const container = $("#tableGrid");
+            container.empty();
+
+            tables.forEach(table => {
+                const color = table.status === "Available" ? "btn-success" :
+                              table.status === "Reserved" ? "btn-warning" : "btn-danger";
+
+                const disabled = table.status !== "Available" ? "disabled" : "";
+                container.append(`
+                    <div class="col p-2">
+                        <button class="btn ${color} w-100 table-btn" ${disabled} onclick="selectTable(${table.table_id})">
+                            Table ${table.table_number}
+                        </button>
+                    </div>
+                `);
+            });
+        });
+    }
+
+    function selectTable(tableId) {
+        $.post("select_table.php", { table_id: tableId }, function(response) {
+            alert(response);
+            loadTableGrid(); // Refresh grid
+        });
+    }
+
+    $(document).ready(loadTableGrid);
+</script>
 
 </body>
 </html>

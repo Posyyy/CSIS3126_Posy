@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'] ?? null;
 
     if (!$email || !$password) {
-        die("⚠️ Email and password are required.");
+        die("U+26A0,  Email and password are required.");
     }
 
     $stmt = $conn->prepare("SELECT staff_id, password, role FROM staff WHERE email = ?");
