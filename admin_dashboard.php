@@ -1,10 +1,6 @@
 <?php
 session_start();
-include 'db.php'; // Ensure database connection is established
-
-// Redirect non-staff users to login
-
-
+include 'db.php';
 
 // Fetch waitlist data
 $sql = "SELECT waitlist.waitlist_id, customers.name, customers.phone_number, waitlist.party_size, waitlist.status
@@ -78,50 +74,59 @@ $conn->close();
             if (confirm("Are you sure you want to update the status to " + newStatus + "?")) {
                 $.post("update_status.php", { id: id, status: newStatus }, function(response) {
                     alert(response);
-                    $("#status-" + id).text(newStatus); // Update status in UI
+                    $("#status-" + id).text(newStatus);
                 });
             }
         }
-    </script>
-<h4 class="mt-4">Table Layout</h4>
-<div class="container">
-    <div class="row row-cols-4" id="tableGrid">
-        <!-- Table buttons will be inserted dynamically -->
-    </div>
-</div>
 
-<script>
-    function loadTableGrid() {
-        $.get("get_tables.php", function(data) {
-            const tables = JSON.parse(data);
-            const container = $("#tableGrid");
-            container.empty();
+        function loadTableGrid() {
+            $.get("get_tables.php", function(data) {
+                const tables = data;
+                const container = $("#tableGrid");
+                container.empty();
 
-            tables.forEach(table => {
-                const color = table.status === "Available" ? "btn-success" :
-                              table.status === "Reserved" ? "btn-warning" : "btn-danger";
+                tables.forEach(table => {
+                    const color = table.status === "Available" ? "btn-success" :
+                                  table.status === "Reserved" ? "btn-warning" : "btn-danger";
 
-                const disabled = table.status !== "Available" ? "disabled" : "";
-                container.append(`
-                    <div class="col p-2">
-                        <button class="btn ${color} w-100 table-btn" ${disabled} onclick="selectTable(${table.table_id})">
-                            Table ${table.table_number}
-                        </button>
-                    </div>
-                `);
+                    container.append(`
+                        <div class="col p-2">
+                            <button class="btn ${color} w-100 table-btn" title="Status: ${table.status}"
+                                onclick="adminChangeTableStatus(${table.table_id}, '${table.status}')">
+                                Table ${table.table_number}
+                            </button>
+                        </div>
+                    `);
+                });
             });
-        });
-    }
+        }
 
-    function selectTable(tableId) {
-        $.post("select_table.php", { table_id: tableId }, function(response) {
-            alert(response);
-            loadTableGrid(); // Refresh grid
-        });
-    }
+        function adminChangeTableStatus(tableId, currentStatus) {
+            const newStatus = prompt("Enter new status (Available, Reserved, Occupied):", currentStatus);
+            const validStatuses = ["Available", "Reserved", "Occupied"];
 
-    $(document).ready(loadTableGrid);
-</script>
+            if (newStatus && validStatuses.includes(newStatus)) {
+                $.post("update_table_status.php", {
+                    table_id: tableId,
+                    status: newStatus
+                }, function(response) {
+                    alert(response);
+                    loadTableGrid();
+                });
+            } else {
+                alert("Invalid status. Please enter Available, Reserved, or Occupied.");
+            }
+        }
+
+        $(document).ready(loadTableGrid);
+    </script>
+
+    <h4 class="mt-4">Table Layout</h4>
+    <div class="container">
+        <div class="row row-cols-4" id="tableGrid">
+            <!-- Table buttons will be inserted dynamically -->
+        </div>
+    </div>
 
 </body>
 </html>

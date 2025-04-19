@@ -1,34 +1,34 @@
 <?php
-session_start();
+session_start(); // Add this to access session data
 include 'db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $waitlistId = intval($_POST['id']);
+    $tableId = intval($_POST['table_id']);
     $newStatus = $_POST['status'];
-    $adminUsername = $_SESSION['username'] ?? 'Unknown';
+    $adminUsername = $_SESSION['username'] ?? 'Unknown'; // fallback if not set
 
-    $validStatuses = ['Seated', 'Removed'];
+    $validStatuses = ['Available', 'Reserved', 'Occupied'];
 
     if (!in_array($newStatus, $validStatuses)) {
         echo "Invalid status.";
         exit;
     }
 
-    // Update the waitlist entry status
-    $stmt = $conn->prepare("UPDATE waitlist SET status = ? WHERE waitlist_id = ?");
-    $stmt->bind_param("si", $newStatus, $waitlistId);
+    // Update table status
+    $stmt = $conn->prepare("UPDATE tables SET status = ? WHERE table_id = ?");
+    $stmt->bind_param("si", $newStatus, $tableId);
 
     if ($stmt->execute()) {
-        echo "Status updated to $newStatus.";
+        echo "Table status updated to $newStatus.";
 
         // Log the admin action
         $logStmt = $conn->prepare("INSERT INTO admin_logs (admin_username, action) VALUES (?, ?)");
-        $actionText = "Updated waitlist ID $waitlistId to status '$newStatus'";
+        $actionText = "Updated table ID $tableId to status '$newStatus'";
         $logStmt->bind_param("ss", $adminUsername, $actionText);
         $logStmt->execute();
         $logStmt->close();
     } else {
-        echo "Error updating status.";
+        echo "Error updating table status.";
     }
 
     $stmt->close();

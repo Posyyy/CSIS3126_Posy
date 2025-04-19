@@ -32,6 +32,42 @@ $restaurant_id = $_SESSION['restaurant_id'] ?? 1; // Dynamically set restaurant 
             display: none;
             z-index: 1000;
         }
+
+        .table-room-map {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-template-rows: repeat(4, 100px);
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .table-tile {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .table-tile:hover {
+            transform: scale(1.05);
+        }
+
+        .available { background-color: #28a745; }    /* Green */
+        .reserved  { background-color: #fd7e14; }    /* Orange */
+        .occupied  { background-color: #dc3545; }    /* Red */
+
+        .table-tile.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -41,7 +77,9 @@ $restaurant_id = $_SESSION['restaurant_id'] ?? 1; // Dynamically set restaurant 
 <div class="login-container" id="loginForm">
     <form action="login.php" method="post">
         <div class="mb-2">
-            <input type="text" name="email" class="form-control" placeholder="Email" required>
+            <label>
+                <input type="text" name="email" class="form-control" placeholder="Email" required>
+            </label>
         </div>
         <div class="mb-2">
             <input type="password" name="password" class="form-control" placeholder="Password" required>
@@ -102,7 +140,7 @@ $restaurant_id = $_SESSION['restaurant_id'] ?? 1; // Dynamically set restaurant 
             <tr>
                 <th>ID</th>
                 <th>Name</th>
-                <th> Email </th>
+                <th>Email</th>
                 <th>Party Size</th>
                 <th>Waitlist Type</th>
                 <th>Reservation Time</th>
@@ -115,30 +153,35 @@ $restaurant_id = $_SESSION['restaurant_id'] ?? 1; // Dynamically set restaurant 
         </table>
     </div>
 </div>
-<h4 class="mt-4">Table Layout</h4>
-<div class="container">
-    <div class="row row-cols-4" id="tableGrid">
-        <!-- Table buttons will be inserted dynamically -->
+
+<h4 class="mt-4 text-center">Table Layout</h4>
+<div class="container text-center">
+    <div id="tableRoomMap" class="table-room-map mt-3">
+        <!-- Tables will load here -->
     </div>
 </div>
 
 <script>
     function loadTableGrid() {
         $.get("get_tables.php", function(data) {
-            const tables = JSON.parse(data);
-            const container = $("#tableGrid");
-            container.empty();
+            const tables = data;
+            const grid = $("#tableRoomMap");
+            grid.empty();
 
             tables.forEach(table => {
-                const color = table.status === "Available" ? "btn-success" :
-                              table.status === "Reserved" ? "btn-warning" : "btn-danger";
+                const status = table.status.toLowerCase();
+                const cssClass = status === "available" ? "available" :
+                                 status === "reserved"  ? "reserved"  :
+                                 "occupied";
 
-                const disabled = table.status !== "Available" ? "disabled" : "";
-                container.append(`
-                    <div class="col p-2">
-                        <button class="btn ${color} w-100 table-btn" ${disabled} onclick="selectTable(${table.table_id})">
-                            Table ${table.table_number}
-                        </button>
+                const disabled = status !== "available" ? "disabled" : "";
+
+                grid.append(`
+                    <div class="table-tile ${cssClass} ${disabled}"
+                         onclick="${status === 'available' ? `selectTable(${table.table_id})` : ''}">
+                        Table ${table.table_number}<br>
+                        Seats: ${table.capacity}<br>
+                        Status: ${table.status}
                     </div>
                 `);
             });
@@ -152,10 +195,6 @@ $restaurant_id = $_SESSION['restaurant_id'] ?? 1; // Dynamically set restaurant 
         });
     }
 
-    $(document).ready(loadTableGrid);
-</script>
-
-<script>
     function toggleLogin() {
         let loginForm = document.getElementById("loginForm");
         loginForm.style.display = (loginForm.style.display === "block") ? "none" : "block";
@@ -191,7 +230,10 @@ $restaurant_id = $_SESSION['restaurant_id'] ?? 1; // Dynamically set restaurant 
         });
     });
 
-    $(document).ready(loadWaitlist);
+    $(document).ready(function () {
+        loadWaitlist();
+        loadTableGrid();
+    });
 </script>
 
 </body>

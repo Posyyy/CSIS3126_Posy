@@ -1,26 +1,17 @@
 <?php
 include 'db.php';
 
-if (isset($_POST['table_id'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $table_id = $_POST['table_id'];
 
-    $sql = "UPDATE Tables SET status = 'Occupied' WHERE table_id = ?";
+    // Mark table as occupied for now (you can expand this)
+    $sql = "UPDATE tables SET status = 'occupied' WHERE table_id = ?";
     $stmt = $conn->prepare($sql);
-
-    if ($stmt) {
-        $stmt->bind_param("i", $table_id);
-        if ($stmt->execute()) {
-            echo "Table selected successfully.";
-        } else {
-            echo "Failed to update table.";
-        }
-        $stmt->close();
+    $stmt->bind_param("i", $table_id);
+    if ($stmt->execute()) {
+        echo "Table assigned successfully!";
     } else {
-        echo "Database error: Could not prepare statement.";
+        echo "Error assigning table.";
     }
-} else {
-    echo "No table ID provided.";
 }
-
-$conn->close();
 ?>

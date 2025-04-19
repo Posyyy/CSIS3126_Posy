@@ -1,17 +1,19 @@
 <?php
 include 'db.php';
 
-$sql = "SELECT * FROM Tables ORDER BY table_number ASC";
-$result = $conn->query($sql);
+$restaurant_id = $_GET['restaurant_id'] ?? 1;
+
+$sql = "SELECT * FROM tables WHERE restaurant_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $restaurant_id);
+$stmt->execute();
+$result = $stmt->get_result();
 
 $tables = [];
-
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $tables[] = $row;
-    }
+while ($row = $result->fetch_assoc()) {
+    $tables[] = $row;
 }
 
-echo json_encode($tables); // Send JSON to the frontend
-$conn->close();
+header('Content-Type: application/json'); // Ensure proper content type
+echo json_encode($tables);
 ?>
