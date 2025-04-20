@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $stmt = $conn->prepare("SELECT staff_id, password, role FROM staff WHERE email = ?");
     if (!$stmt) {
-        die("❌ Query preparation failed: " . $conn->error);
+        die(" Query preparation failed: " . $conn->error);
     }
 
     $stmt->bind_param("s", $email);
@@ -33,10 +33,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header("Location: admin_dashboard.php");
             exit();
         } else {
-            echo "❌ Invalid credentials.";
+            echo "Invalid credentials.";
         }
     } else {
-        echo "❌ User not found.";
+        echo " User not found.";
     }
 
     $stmt->close();

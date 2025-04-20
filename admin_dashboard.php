@@ -6,6 +6,7 @@ include 'db.php';
 $sql = "SELECT waitlist.waitlist_id, customers.name, customers.phone_number, waitlist.party_size, waitlist.status
         FROM waitlist
         INNER JOIN customers ON waitlist.customer_id = customers.customer_id
+         WHERE waitlist.status != 'Removed'
         ORDER BY waitlist.waitlist_id ASC";
 
 $result = $conn->query($sql);
@@ -16,7 +17,7 @@ if ($result) {
         $waitlist[] = $row;
     }
 } else {
-    die(" Database query error: " . $conn->error);
+    die("Database query error: " . $conn->error);
 }
 
 $conn->close();
@@ -66,6 +67,13 @@ $conn->close();
         </table>
     </div>
 
+    <h4 class="mt-4">Table Layout</h4>
+    <div class="container">
+        <div class="row row-cols-4" id="tableGrid">
+            <!-- Table buttons will be inserted dynamically -->
+        </div>
+    </div>
+
     <a href="index.html" class="btn btn-secondary mt-3">Back to Home</a>
     <a href="logout.php" class="btn btn-danger mt-3">Logout</a>
 
@@ -74,7 +82,11 @@ $conn->close();
             if (confirm("Are you sure you want to update the status to " + newStatus + "?")) {
                 $.post("update_status.php", { id: id, status: newStatus }, function(response) {
                     alert(response);
-                    $("#status-" + id).text(newStatus);
+                    if (newStatus === "Removed") {
+                        $("#status-" + id).closest("tr").remove();
+                    } else {
+                        $("#status-" + id).text(newStatus);
+                    }
                 });
             }
         }
@@ -120,13 +132,6 @@ $conn->close();
 
         $(document).ready(loadTableGrid);
     </script>
-
-    <h4 class="mt-4">Table Layout</h4>
-    <div class="container">
-        <div class="row row-cols-4" id="tableGrid">
-            <!-- Table buttons will be inserted dynamically -->
-        </div>
-    </div>
 
 </body>
 </html>

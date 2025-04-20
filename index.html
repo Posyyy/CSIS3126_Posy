@@ -2,7 +2,7 @@
 session_start();
 include 'db.php';
 
-$restaurant_id = $_SESSION['restaurant_id'] ?? 1; // Dynamically set restaurant ID
+$restaurant_id = $_SESSION['restaurant_id'] ?? 1;
 ?>
 
 <!DOCTYPE html>
@@ -60,9 +60,9 @@ $restaurant_id = $_SESSION['restaurant_id'] ?? 1; // Dynamically set restaurant 
             transform: scale(1.05);
         }
 
-        .available { background-color: #28a745; }    /* Green */
-        .reserved  { background-color: #fd7e14; }    /* Orange */
-        .occupied  { background-color: #dc3545; }    /* Red */
+        .available { background-color: #28a745; }
+        .reserved  { background-color: #fd7e14; }
+        .occupied  { background-color: #dc3545; }
 
         .table-tile.disabled {
             opacity: 0.6;
@@ -77,9 +77,7 @@ $restaurant_id = $_SESSION['restaurant_id'] ?? 1; // Dynamically set restaurant 
 <div class="login-container" id="loginForm">
     <form action="login.php" method="post">
         <div class="mb-2">
-            <label>
-                <input type="text" name="email" class="form-control" placeholder="Email" required>
-            </label>
+            <input type="text" name="email" class="form-control" placeholder="Email" required>
         </div>
         <div class="mb-2">
             <input type="password" name="password" class="form-control" placeholder="Password" required>
@@ -175,23 +173,23 @@ $restaurant_id = $_SESSION['restaurant_id'] ?? 1; // Dynamically set restaurant 
                                  "occupied";
 
                 const disabled = status !== "available" ? "disabled" : "";
+                const clickAction = status === "available" ? `onclick="selectTable(${table.id})"` : "";
 
                 grid.append(`
-                    <div class="table-tile ${cssClass} ${disabled}"
-
+                    <div class="table-tile ${cssClass} ${disabled}" ${clickAction}>
                         Table ${table.table_number}<br>
                         Seats: ${table.capacity}<br>
                         Status: ${table.status}
                     </div>
                 `);
             });
-        });
+        }, 'json');
     }
 
     function selectTable(tableId) {
         $.post("select_table.php", { table_id: tableId }, function(response) {
             alert(response);
-            loadTableGrid(); // Refresh grid
+            loadTableGrid();
         });
     }
 
@@ -222,7 +220,7 @@ $restaurant_id = $_SESSION['restaurant_id'] ?? 1; // Dynamically set restaurant 
     $("#waitlistForm").submit(function(event) {
         event.preventDefault();
 
-        $.post("add_to_waitlist.php", $("#waitlistForm").serialize(), function(response) {
+        $.post("add_to_waitlist.php", $(this).serialize(), function(response) {
             alert(response);
             loadWaitlist();
             $("#waitlistForm")[0].reset();

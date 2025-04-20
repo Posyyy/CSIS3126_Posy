@@ -1,4 +1,5 @@
 <?php
+session_start();
 include 'db.php';
 
 $restaurant_id = $_SESSION['restaurant_id'] ?? 1;
@@ -7,10 +8,13 @@ $sql = "SELECT waitlist.waitlist_id, customers.name, customers.email, waitlist.p
                waitlist.arrival_time, waitlist.waitlist_type, waitlist.reservation_time
         FROM waitlist
         INNER JOIN customers ON waitlist.customer_id = customers.customer_id
-        WHERE waitlist.restaurant_id = $restaurant_id
+        WHERE waitlist.restaurant_id = ? AND waitlist.status != 'Removed'
         ORDER BY waitlist.arrival_time ASC";
 
-$result = $conn->query($sql);
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $restaurant_id);
+$stmt->execute();
+$result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -23,7 +27,6 @@ if ($result->num_rows > 0) {
         echo "<td>" . ($row['reservation_time'] ?? 'N/A') . "</td>";
         echo "<td id='status-{$row['waitlist_id']}'>" . htmlspecialchars($row['status']) . "</td>";
 
-        session_start();
         if (isset($_SESSION['role']) && $_SESSION['role'] == "admin") {
             echo "<td>
                     <button class='btn btn-success btn-sm' onclick='updateStatus(" . $row['waitlist_id'] . ", \"Seated\")'>Seat</button>
@@ -37,5 +40,6 @@ if ($result->num_rows > 0) {
     echo "<tr><td colspan='7' class='text-center'>No customers in the waitlist.</td></tr>";
 }
 
+$stmt->close();
 $conn->close();
 ?>

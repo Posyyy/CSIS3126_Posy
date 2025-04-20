@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'db_connect.php';
+include 'db.php';
 
 if ($_SESSION['role'] !== "admin") {
     echo "Access Denied!";
