@@ -178,7 +178,7 @@ $restaurant_id = $_SESSION['restaurant_id'] ?? 1; // Dynamically set restaurant 
 
                 grid.append(`
                     <div class="table-tile ${cssClass} ${disabled}"
-                         onclick="${status === 'available' ? `selectTable(${table.table_id})` : ''}">
+
                         Table ${table.table_number}<br>
                         Seats: ${table.capacity}<br>
                         Status: ${table.status}
